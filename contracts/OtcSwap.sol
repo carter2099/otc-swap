@@ -104,4 +104,3 @@ contract OtcSwap {
         partner.transfer(offer.asset);
     }
 }
-
