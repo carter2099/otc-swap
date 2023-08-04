@@ -7,7 +7,7 @@ contract OtcSwap {
     // by a single party
     struct Proposition {
         uint asset; // just ether for now
-        bool committed; // swap approval
+        bool approved; // swap approval
         address partner;
         bool engaged; // whether or not this proposition is active
     }
@@ -29,7 +29,7 @@ contract OtcSwap {
         );
         offer.engaged = true;
         offer.asset = msg.value;
-        offer.committed = false;
+        offer.approved = false;
         offer.partner = partner;
     }
 
@@ -44,22 +44,22 @@ contract OtcSwap {
         require(!offer.engaged, "You are already engaged in a trade");
         offer.engaged = true;
         offer.asset = msg.value;
-        offer.committed = false;
+        offer.approved = false;
         offer.partner = partner;
     }
 
-    function commit() external {
+    function approve() external {
         Proposition storage offer = props[msg.sender];
         require(offer.engaged, "Not engaged in a trade");
         require(props[offer.partner].engaged, "No partner");
-        offer.committed = true;
+        offer.approved = true;
     }
 
-    function decommit() external {
+    function unapprove() external {
         Proposition storage offer = props[msg.sender];
         require(offer.engaged, "Not engaged in a trade");
-        require(offer.committed, "Not committed to a trade");
-        offer.committed = false;
+        require(offer.approved, "No trade approved");
+        offer.approved = false;
     }
 
     function updateAsset(uint asset) external {
@@ -67,8 +67,8 @@ contract OtcSwap {
         require(offer.engaged, "Not currently in a trade");
         if (props[offer.partner].engaged) {
             require(
-                !props[offer.partner].committed,
-                "Cannot change asset while partner is committed"
+                !props[offer.partner].approved,
+                "Cannot change asset while partner has approved the current trade"
             );
         }
         // This is going to have to do some stuff
@@ -77,7 +77,7 @@ contract OtcSwap {
     function exitTrade() external {
         Proposition storage offer = props[msg.sender];
         require(offer.engaged, "Not currently in a trade");
-        require(!offer.committed, "Decommit from the trade before exiting");
+        require(!offer.approved, "Unapprove the current trade before exiting");
         offer.engaged = false;
         // This is going to have to do some stuff
     }
@@ -86,7 +86,7 @@ contract OtcSwap {
         address payable caller = payable(msg.sender);
         Proposition storage offer = props[caller];
         require(offer.engaged, "Not currently in a trade");
-        require(offer.committed, "Not committed to a trade");
+        require(offer.approved, "No trade is currently approved");
         require(
             offer.asset <= caller.balance,
             "Caller balance is lower than asset offered"
@@ -94,7 +94,7 @@ contract OtcSwap {
         address payable partner = payable(offer.partner);
         Proposition storage partnerOffer = props[partner];
         require(partnerOffer.engaged, "Partner not currently in a trade");
-        require(partnerOffer.committed, "Partner not committed to a trade");
+        require(partnerOffer.approved, "Partner has not approved the trade");
         require(
             partnerOffer.asset <= partner.balance,
             "Partner balance is lower than asser offered"
