@@ -18,6 +18,11 @@ contract OtcSwap {
     // Do nothing for now
     constructor() {}
 
+    // Read props
+    function getProp() public view returns (Proposition memory) {
+        return props[msg.sender];
+    }
+
     // Propose a trade
     function initializeTrade(address partner) external payable {
         // Get reference to the proposition for the sender's address
@@ -97,7 +102,7 @@ contract OtcSwap {
         require(partnerOffer.approved, "Partner has not approved the trade");
         require(
             partnerOffer.asset <= partner.balance,
-            "Partner balance is lower than asser offered"
+            "Partner balance is lower than asset offered"
         );
         // Execute the swap of assets
         caller.transfer(partnerOffer.asset);
