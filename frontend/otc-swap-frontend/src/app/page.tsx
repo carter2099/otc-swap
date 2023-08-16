@@ -1,3 +1,5 @@
+import OtcSwapComponent from "@/components/OtcSwapComponent";
+
 export default function Home() {
-  return <div>hello world</div>;
+  return <OtcSwapComponent />;
 }
